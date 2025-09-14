@@ -12,22 +12,85 @@
 // Esse método também retorna uma Promise, porque pode demorar para converter os dados.
 //"Assim que essa promessa for resolvida (fulfilled), execute esta função com o valor de retorno".
 const containerVideo = document.querySelector(".videos__container")
-const api  =  fetch("http://localhost:3000/videos")
-.then(resposta => resposta.json())
-.then(videos => videos.forEach((video)=> 
+
+async function buscarEMostrarVideos() {
+    try{
+    const busca  =  await fetch("http://localhost:3000/videos")
+    const videos =  await busca.json()
+        videos.forEach((video)=> 
+        {
+            if (video.categoria == "")
+            {
+                throw new Error("Video não tem categoria")
+            }
+        containerVideo.innerHTML += `
+        <li class="videos__item" data-categoria="${video.categoria}">
+            <iframe src="${video.url}" title="${video.titulo}" frameborder="0" allowfullscreen> </iframe>
+            <div class="descricao-video">
+                <img class="img-canal" src="${video.imagem}" alt="logo do canal">
+                <h3 class="titulo-video">${video.titulo}</h3>
+                <p class="titulo-canal">${video.descricao}</p>
+            </div>
+        </li>
+        `;
+    })
+    }
+    catch(error)
     {
-     containerVideo.innerHTML += `
-     <li class="videos__item">
-     <iframe src="${video.url}" title="${video.titulo}" frameborder="0" allowfullscreen> </iframe>
-     <div class="descricao-video">
-     <img class="img-canal" src="${video.imagem}" alt="logo do canal">
-     <h3 class="titulo-video">${video.titulo}</h3>
-     <p class="titulo-canal">${video.descricao}</p>
-     </div>
-     </li>
-     `;
-}))
-//Um .catch(...) no final do encadeamento pega qualquer rejeição que aconteça em qualquer ponto anterior da cadeia.
-.catch(erro => {
-    containerVideo.innerHTML = `<p> Houve um erro ao carregar os videos ${erro} </p>`
-})
+        containerVideo.innerHTML = `<p>Houve um erro a carregar os vídeos: ${error}</p>`
+    }
+    finally
+    {
+        console.log('Isso sempre acontece')
+    }
+}
+
+buscarEMostrarVideos();
+
+const barraDePesquisa = document.querySelector(".pesquisar__input")
+barraDePesquisa.addEventListener("input", filtrarPesquisa);
+
+function filtrarPesquisa()
+{
+    const videos = document.querySelectorAll(".videos__item")
+    if(barraDePesquisa.value != "")
+    {
+        videos.forEach(video =>{
+            let titulo = video.querySelector(".titulo-video").textContent.toLowerCase()
+            let valorFiltro = barraDePesquisa.value.toLowerCase()
+            titulo.includes(valorFiltro) ? video.style.display = "block": video.style.display = "none"
+        } )
+    }
+    else
+    {
+        videos.forEach(video => video.style.display = "block")
+    }
+}
+const botaoCategoria = document.querySelectorAll(".superior__item")
+botaoCategoria.forEach(botao => addEventListener("click", filtrarCategoria))
+
+function filtrarCategoria(evento)
+{
+    const videos = document.querySelectorAll(".videos__item");
+    const botaoClicado = evento.target.name;
+    console.log(botaoClicado);
+    if(botaoClicado != "Tudo")
+    {
+        videos.forEach(video => 
+        {
+            if(video.dataset.categoria == botaoClicado)
+            {
+                video.style.display = "block"
+            }
+            else
+            {
+                video.style.display = "None"
+            }
+        }
+        )
+    }
+    else
+    {
+        videos.forEach(video => video.style.display = "block")
+    }
+}
